@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import {
   FaReact,
@@ -22,14 +22,36 @@ import {
   SiCircleci,
   SiApachekafka,
 } from 'react-icons/si';
+import { IconType } from 'react-icons';
+
+interface Skill {
+  name: string;
+  Icon: IconType;
+  color: string;
+}
 
 const Skills: React.FC = () => {
+  const [isClient, setIsClient] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setIsMobile(window.innerWidth <= 768);
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const { ref, inView } = useInView({
-    threshold: 0.5,
+    threshold: isMobile ? 0.1 : 0.5,
     triggerOnce: true,
   });
 
-  const skills = useMemo(
+  const skills: Skill[] = useMemo(
     () =>
       [
         { name: 'Angular', Icon: FaAngular, color: '#DD0031' },
@@ -58,7 +80,9 @@ const Skills: React.FC = () => {
     <section
       id="skills"
       ref={ref}
-      className={`transition-opacity duration-1000 ${inView ? 'opacity-100' : 'opacity-0'}`}
+      className={`transition-opacity duration-1000 ${
+        isClient && (inView || isMobile) ? 'opacity-100' : 'opacity-0'
+      }`}
     >
       <h2 className="text-5xl font-bold text-blue-800 mb-16">Skills</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-10">
@@ -66,12 +90,18 @@ const Skills: React.FC = () => {
           <div
             key={skill.name}
             className={`bg-white p-8 rounded-lg shadow-xl flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-105 hover:shadow-2xl ${
-              inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              isClient && (inView || isMobile)
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10'
             }`}
-            style={{ transitionDelay: `${index * 100}ms` }}
+            style={{
+              transitionDelay: isClient && !isMobile ? `${index * 100}ms` : '0ms',
+            }}
           >
             <skill.Icon className="w-20 h-20 mb-4" style={{ color: skill.color }} />
-            <span className="text-xl font-medium text-gray-800 text-center">{skill.name}</span>
+            <span className="text-xl font-medium text-gray-800 text-center">
+              {skill.name}
+            </span>
           </div>
         ))}
       </div>
